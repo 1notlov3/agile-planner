@@ -39,6 +39,26 @@ class PlannerTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.p.add_task("   ")
 
+    def test_done_task_not_planned_again(self):
+        self.p.start_sprint("Первый выпуск", 7, date(2026, 11, 2))
+        self.p.plan(1)
+        self.p.move(1, "done")
+        self.p.close_sprint()
+        self.p.start_sprint("Второй выпуск", 7, date(2026, 11, 9))
+        with self.assertRaises(ValueError):
+            self.p.plan(1)
+        self.assertEqual(self.p.get_task(1).sprint_id, 1)
+        self.assertEqual(self.p.velocity(), 3)
+
+    def test_closed_sprint_task_locked(self):
+        self.p.start_sprint("Первый выпуск", 7, date(2026, 11, 2))
+        self.p.plan(1)
+        self.p.move(1, "done")
+        self.p.close_sprint()
+        with self.assertRaises(ValueError):
+            self.p.move(1, "todo")
+        self.assertEqual(self.p.velocity(), 3)
+
 
 if __name__ == "__main__":
     unittest.main()
