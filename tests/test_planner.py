@@ -35,6 +35,10 @@ class PlannerTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.p.add_task("x", 1, "urgent")
 
+    def test_empty_title(self):
+        with self.assertRaises(ValueError):
+            self.p.add_task("   ")
+
 
 if __name__ == "__main__":
     unittest.main()
