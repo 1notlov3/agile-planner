@@ -72,3 +72,32 @@ class Planner:
                 task.status = "backlog"
         sprint.closed = True
         return sprint
+
+    # --- доска ---
+    def move(self, task_id, status):
+        if status not in STATUSES:
+            raise ValueError(f"неизвестный статус: {status}")
+        task = self.get_task(task_id)
+        task.status = status
+        task.done_date = date.today().isoformat() if status == "done" else None
+        return task
+
+    def board(self):
+        """Задачи активного спринта, сгруппированные по статусам."""
+        sprint = self.active_sprint()
+        columns = {s: [] for s in STATUSES[1:]}
+        if sprint:
+            for task in self.tasks:
+                if task.sprint_id == sprint.id and task.status in columns:
+                    columns[task.status].append(task)
+        return columns
+
+    def velocity(self):
+        """Средняя скорость: сумма оценок выполненных задач на спринт."""
+        closed = [s for s in self.sprints if s.closed]
+        if not closed:
+            return 0
+        done = sum(t.points for t in self.tasks
+                   if t.status == "done" and t.sprint_id in
+                   {s.id for s in closed})
+        return round(done / len(closed), 1)
