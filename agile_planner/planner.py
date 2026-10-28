@@ -14,6 +14,8 @@ class Planner:
 
     # --- бэклог ---
     def add_task(self, title, points=1, priority="medium"):
+        if not title.strip():
+            raise ValueError("название задачи не может быть пустым")
         if priority not in PRIORITIES:
             raise ValueError(f"неизвестный приоритет: {priority}")
         if points <= 0:
