@@ -53,12 +53,23 @@ class Planner:
         self.sprints.append(sprint)
         return sprint
 
+    def closed_sprint_ids(self):
+        return {s.id for s in self.sprints if s.closed}
+
     def plan(self, task_id):
         """Переносит задачу из бэклога в активный спринт."""
         sprint = self.active_sprint()
         if sprint is None:
             raise RuntimeError("нет активного спринта")
         task = self.get_task(task_id)
+        if task.status == "done":
+            raise ValueError(f"задача {task_id} уже выполнена, "
+                             "её нельзя взять в новый спринт")
+        if task.sprint_id in self.closed_sprint_ids():
+            raise ValueError(f"задача {task_id} относится к закрытому "
+                             f"спринту {task.sprint_id}")
+        if task.sprint_id == sprint.id:
+            raise ValueError(f"задача {task_id} уже в текущем спринте")
         task.sprint_id = sprint.id
         task.status = "todo"
         return task
@@ -80,6 +91,9 @@ class Planner:
         if status not in STATUSES:
             raise ValueError(f"неизвестный статус: {status}")
         task = self.get_task(task_id)
+        if task.sprint_id in self.closed_sprint_ids():
+            raise ValueError(f"задача {task_id} относится к закрытому "
+                             f"спринту {task.sprint_id}, статус не меняется")
         task.status = status
         task.done_date = date.today().isoformat() if status == "done" else None
         return task
@@ -101,5 +115,5 @@ class Planner:
             return 0
         done = sum(t.points for t in self.tasks
                    if t.status == "done" and t.sprint_id in
-                   {s.id for s in closed})
+                   self.closed_sprint_ids())
         return round(done / len(closed), 1)
